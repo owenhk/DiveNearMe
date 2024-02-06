@@ -40,10 +40,53 @@ def find_nearby_sites(user_lat, user_lon):
     return nearby_sites
 
 
+def find_sites_by_name(search_key):
+    connection = sqlite3.connect('Database/sites.sqlite')
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT * FROM dive_sites
+        WHERE name LIKE ?
+        LIMIT 10
+    """, ('%' + search_key + '%',))
+
+    sites = cursor.fetchall()
+
+    connection.close()
+    return sites
+
+
+def get_site_info(site_id):
+    connection = sqlite3.connect('Database/sites.sqlite')
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT * FROM dive_sites
+        WHERE id = ?
+    """, (site_id,))
+
+    site = cursor.fetchone()
+
+    connection.close()
+    return site
+
+
 @app.route('/find_nearby_sites/<float:user_lat>/<float:user_lon>')
 def get_nearby_sites(user_lat, user_lon):
     nearby_sites = find_nearby_sites(user_lat, user_lon)
     return {'nearby_sites': nearby_sites}
+
+
+@app.route('/find_nearby_sites/<site_name>')
+def get_nearby_sites(site_name):
+    nearby_sites = find_sites_by_name(site_name)
+    return {'nearby_sites': nearby_sites}
+
+
+@app.route('/site_info/<int:site_id>')
+def get_site_info(site_id):
+    site_info = get_site_info(site_id)
+    return {'site_info': site_info}
 
 
 if __name__ == '__main__':
